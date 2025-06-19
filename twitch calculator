@@ -1,0 +1,42 @@
+import pandas as pd
+import numpy as np
+
+# Define subscription tiers and streamer cut
+tiers = {
+    "Tier 1": {"price": 4.99, "cut": 0.5},
+    "Tier 2": {"price": 9.99, "cut": 0.5},
+    "Tier 3": {"price": 24.99, "cut": 0.5},
+    "Prime Sub": {"price": 4.99, "cut": 0.5}
+}
+
+# Simulate different subscriber counts
+subscriber_counts = {
+    "Tier 1": 100,
+    "Tier 2": 10,
+    "Tier 3": 5,
+    "Prime Sub": 25
+}
+
+# Calculate streamer earnings
+data = []
+for tier, details in tiers.items():
+    subs = subscriber_counts.get(tier, 0)
+    price = details["price"]
+    cut = details["cut"]
+    earnings_per_sub = price * cut
+    total_earnings = earnings_per_sub * subs
+    data.append({
+        "Subscription Tier": tier,
+        "Subscribers": subs,
+        "Price per Sub": price,
+        "Streamer Cut per Sub": earnings_per_sub,
+        "Total Earnings": total_earnings
+    })
+
+df = pd.DataFrame(data)
+
+# Total summary
+total_earnings = df["Total Earnings"].sum()
+df.loc[len(df.index)] = ["Total", df["Subscribers"].sum(), "", "", total_earnings]
+
+import ace_tools as tools; tools.display_dataframe_to_user(name="Twitch Earnings Calculator", dataframe=df)
