@@ -1,12 +1,23 @@
-# twitch_calculator_gui.py
-
 import streamlit as st
 
+# Currency conversion rates (as of static example)
+CURRENCY_RATES = {
+    "USD": 1.0,
+    "EUR": 0.92,
+}
+
+CURRENCY_SYMBOLS = {
+    "USD": "$",
+    "EUR": "€",
+}
+
 def calculate_twitch_revenue(subs_t1, subs_t2, subs_t3, avg_viewers,
-                              hours_streamed, ad_cpm, bits_revenue, donations):
-    tier1_rate = 4.99 * 0.5
-    tier2_rate = 9.99 * 0.5
-    tier3_rate = 24.99 * 0.5
+                              hours_streamed, ad_cpm, bits_revenue, donations, currency):
+    rate = CURRENCY_RATES[currency]
+
+    tier1_rate = 4.99 * 0.5 * rate
+    tier2_rate = 9.99 * 0.5 * rate
+    tier3_rate = 24.99 * 0.5 * rate
 
     revenue_subs = (
         subs_t1 * tier1_rate +
@@ -15,20 +26,26 @@ def calculate_twitch_revenue(subs_t1, subs_t2, subs_t3, avg_viewers,
     )
 
     total_minutes = avg_viewers * hours_streamed * 60
-    revenue_ads = (total_minutes / 1000) * ad_cpm
+    revenue_ads = (total_minutes / 1000) * ad_cpm * rate
 
-    total_revenue = revenue_subs + revenue_ads + bits_revenue + donations
+    revenue_bits = bits_revenue * rate
+    revenue_donations = donations * rate
+
+    total_revenue = revenue_subs + revenue_ads + revenue_bits + revenue_donations
 
     return {
         "Subscriptions": round(revenue_subs, 2),
         "Ads": round(revenue_ads, 2),
-        "Bits": round(bits_revenue, 2),
-        "Donations": round(donations, 2),
+        "Bits": round(revenue_bits, 2),
+        "Donations": round(revenue_donations, 2),
         "Total": round(total_revenue, 2)
     }
 
 
 st.title("🎮 Twitch Revenue Calculator")
+
+currency = st.selectbox("Select Currency", options=list(CURRENCY_RATES.keys()), index=0)
+currency_symbol = CURRENCY_SYMBOLS[currency]
 
 subs_t1 = st.number_input("Tier 1 Subs", min_value=0, value=0)
 subs_t2 = st.number_input("Tier 2 Subs", min_value=0, value=0)
@@ -36,17 +53,18 @@ subs_t3 = st.number_input("Tier 3 Subs", min_value=0, value=0)
 
 avg_viewers = st.slider("Average Viewers per Stream", 0, 100000, 100)
 hours_streamed = st.slider("Hours Streamed per Month", 0, 500, 20)
-ad_cpm = st.number_input("Ad CPM ($)", min_value=0.0, value=3.5)
-bits_revenue = st.number_input("Bits Revenue ($)", min_value=0.0, value=0.0)
-donations = st.number_input("Donations ($)", min_value=0.0, value=0.0)
+ad_cpm = st.number_input(f"Ad CPM ({currency_symbol})", min_value=0.0, value=3.5)
+bits_revenue = st.number_input(f"Bits Revenue ({currency_symbol})", min_value=0.0, value=0.0)
+donations = st.number_input(f"Donations ({currency_symbol})", min_value=0.0, value=0.0)
 
 if st.button("Calculate Revenue"):
     result = calculate_twitch_revenue(
         subs_t1, subs_t2, subs_t3,
         avg_viewers, hours_streamed,
-        ad_cpm, bits_revenue, donations
+        ad_cpm, bits_revenue, donations,
+        currency
     )
 
-    st.subheader(" Revenue Breakdown")
+    st.subheader("📊 Revenue Breakdown")
     for category, amount in result.items():
-        st.write(f"**{category}:** ${amount:.2f}")
+        st.write(f"**{category}:** {currency_symbol}{amount:.2f}")
