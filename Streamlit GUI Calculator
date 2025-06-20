@@ -1,0 +1,52 @@
+# twitch_calculator_gui.py
+
+import streamlit as st
+
+def calculate_twitch_revenue(subs_t1, subs_t2, subs_t3, avg_viewers,
+                              hours_streamed, ad_cpm, bits_revenue, donations):
+    tier1_rate = 4.99 * 0.5
+    tier2_rate = 9.99 * 0.5
+    tier3_rate = 24.99 * 0.5
+
+    revenue_subs = (
+        subs_t1 * tier1_rate +
+        subs_t2 * tier2_rate +
+        subs_t3 * tier3_rate
+    )
+
+    total_minutes = avg_viewers * hours_streamed * 60
+    revenue_ads = (total_minutes / 1000) * ad_cpm
+
+    total_revenue = revenue_subs + revenue_ads + bits_revenue + donations
+
+    return {
+        "Subscriptions": round(revenue_subs, 2),
+        "Ads": round(revenue_ads, 2),
+        "Bits": round(bits_revenue, 2),
+        "Donations": round(donations, 2),
+        "Total": round(total_revenue, 2)
+    }
+
+
+st.title("🎮 Twitch Revenue Calculator")
+
+subs_t1 = st.number_input("Tier 1 Subs", min_value=0, value=0)
+subs_t2 = st.number_input("Tier 2 Subs", min_value=0, value=0)
+subs_t3 = st.number_input("Tier 3 Subs", min_value=0, value=0)
+
+avg_viewers = st.slider("Average Viewers per Stream", 0, 100000, 100)
+hours_streamed = st.slider("Hours Streamed per Month", 0, 500, 20)
+ad_cpm = st.number_input("Ad CPM ($)", min_value=0.0, value=3.5)
+bits_revenue = st.number_input("Bits Revenue ($)", min_value=0.0, value=0.0)
+donations = st.number_input("Donations ($)", min_value=0.0, value=0.0)
+
+if st.button("Calculate Revenue"):
+    result = calculate_twitch_revenue(
+        subs_t1, subs_t2, subs_t3,
+        avg_viewers, hours_streamed,
+        ad_cpm, bits_revenue, donations
+    )
+
+    st.subheader(" Revenue Breakdown")
+    for category, amount in result.items():
+        st.write(f"**{category}:** ${amount:.2f}")
